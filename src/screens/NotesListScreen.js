@@ -8,6 +8,7 @@ import {
   Alert,
   RefreshControl,
   Dimensions,
+  Animated,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -18,6 +19,7 @@ const { width } = Dimensions.get('window');
 const NotesListScreen = ({ navigation }) => {
   const [notes, setNotes] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [fadeAnim] = useState(new Animated.Value(0));
 
   const loadNotes = async () => {
     try {
@@ -58,6 +60,12 @@ const NotesListScreen = ({ navigation }) => {
   useFocusEffect(
     useCallback(() => {
       loadNotes();
+      // Animate in when screen focuses
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
     }, [])
   );
 
@@ -110,20 +118,42 @@ const NotesListScreen = ({ navigation }) => {
   };
 
   const renderNote = ({ item, index }) => (
-    <TouchableOpacity
-      style={[styles.noteCard, { marginTop: index === 0 ? 20 : 10 }]}
-      activeOpacity={0.9}
+    <Animated.View
+      style={{
+        opacity: fadeAnim,
+        transform: [
+          {
+            translateY: fadeAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [30, 0],
+            }),
+          },
+        ],
+      }}
     >
+      <TouchableOpacity
+        style={[styles.noteCard, { marginTop: index === 0 ? 20 : 10 }]}
+        activeOpacity={0.95}
+      >
       <View style={styles.noteHeader}>
         <View style={styles.dateContainer}>
-          <Text style={styles.timeIcon}>🕒</Text>
+          <View style={styles.timeIcon}>
+            <View style={styles.clockCircle}>
+              <View style={styles.clockHand1} />
+              <View style={styles.clockHand2} />
+            </View>
+          </View>
           <Text style={styles.dateText}>{formatDate(item.timestamp)}</Text>
         </View>
         <TouchableOpacity
           onPress={() => deleteNote(item.id)}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Text style={styles.deleteIcon}>🗑️</Text>
+          <View style={styles.deleteIcon}>
+            <View style={styles.trashBody} />
+            <View style={styles.trashLid} />
+            <View style={styles.trashHandle} />
+          </View>
         </TouchableOpacity>
       </View>
       
@@ -136,11 +166,15 @@ const NotesListScreen = ({ navigation }) => {
         </View>
       )}
     </TouchableOpacity>
+    </Animated.View>
   );
 
   const EmptyState = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyIcon}>📝</Text>
+      <View style={styles.emptyIcon}>
+        <View style={styles.emptyNote} />
+        <View style={styles.emptyNoteLines} />
+      </View>
       <Text style={styles.emptyTitle}>No notes yet</Text>
       <Text style={styles.emptySubtitle}>
         Start recording to create your first note
@@ -149,14 +183,17 @@ const NotesListScreen = ({ navigation }) => {
         style={styles.startButton}
         onPress={() => navigation.goBack()}
       >
-        <Text style={styles.micIcon}>🎤</Text>
+        <View style={styles.micIcon}>
+          <View style={styles.micIconBody} />
+          <View style={styles.micIconStand} />
+        </View>
         <Text style={styles.startButtonText}>Start Recording</Text>
       </TouchableOpacity>
     </View>
   );
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
       <FlatList
         data={notes}
         keyExtractor={(item) => item.id}
@@ -166,21 +203,21 @@ const NotesListScreen = ({ navigation }) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#6366f1']}
-            tintColor="#6366f1"
+            colors={['#8b5cf6']}
+            tintColor="#8b5cf6"
           />
         }
         ListEmptyComponent={EmptyState}
         showsVerticalScrollIndicator={false}
       />
-    </View>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#fafafa',
   },
   listContent: {
     paddingHorizontal: 20,
@@ -188,18 +225,21 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   noteCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 10,
-    shadowColor: '#000',
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 12,
+    marginHorizontal: 2,
+    shadowColor: '#8b5cf6',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 6,
     },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.1)',
   },
   noteHeader: {
     flexDirection: 'row',
@@ -214,28 +254,31 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 14,
-    color: '#6b7280',
+    color: '#8b5cf6',
+    fontWeight: '500',
   },
   processedText: {
     fontSize: 16,
     lineHeight: 24,
-    color: '#1f2937',
+    color: '#0f172a',
     fontWeight: '500',
     marginBottom: 12,
   },
   originalContainer: {
-    backgroundColor: '#f3f4f6',
-    borderRadius: 12,
-    padding: 12,
+    backgroundColor: 'rgba(139, 92, 246, 0.05)',
+    borderRadius: 16,
+    padding: 16,
     marginTop: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.1)',
   },
   originalLabel: {
     fontSize: 12,
-    color: '#6b7280',
-    marginBottom: 4,
+    color: '#8b5cf6',
+    marginBottom: 6,
     fontWeight: '600',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
   originalText: {
     fontSize: 14,
@@ -264,19 +307,21 @@ const styles = StyleSheet.create({
   startButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#6366f1',
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 30,
-    gap: 10,
-    shadowColor: '#6366f1',
+    backgroundColor: '#8b5cf6',
+    paddingHorizontal: 28,
+    paddingVertical: 16,
+    borderRadius: 35,
+    gap: 12,
+    shadowColor: '#8b5cf6',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 8,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 10,
+    borderWidth: 2,
+    borderColor: '#ffffff',
   },
   startButtonText: {
     color: '#fff',
@@ -284,19 +329,103 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   timeIcon: {
-    fontSize: 14,
-    marginRight: 4,
+    marginRight: 8,
+    width: 14,
+    height: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  clockCircle: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#8b5cf6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  clockHand1: {
+    position: 'absolute',
+    width: 1,
+    height: 4,
+    backgroundColor: '#8b5cf6',
+    top: 1,
+  },
+  clockHand2: {
+    position: 'absolute',
+    width: 1,
+    height: 3,
+    backgroundColor: '#8b5cf6',
+    transform: [{ rotate: '90deg' }],
   },
   deleteIcon: {
-    fontSize: 18,
+    width: 16,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  trashBody: {
+    width: 12,
+    height: 14,
+    backgroundColor: '#ef4444',
+    borderRadius: 2,
+    marginTop: 2,
+  },
+  trashLid: {
+    position: 'absolute',
+    top: 1,
+    width: 14,
+    height: 2,
+    backgroundColor: '#ef4444',
+    borderRadius: 1,
+  },
+  trashHandle: {
+    position: 'absolute',
+    top: -1,
+    width: 8,
+    height: 2,
+    backgroundColor: '#ef4444',
+    borderRadius: 1,
   },
   emptyIcon: {
-    fontSize: 64,
+    width: 80,
+    height: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
     opacity: 0.3,
   },
+  emptyNote: {
+    width: 50,
+    height: 60,
+    backgroundColor: '#8b5cf6',
+    borderRadius: 8,
+    opacity: 0.3,
+  },
+  emptyNoteLines: {
+    position: 'absolute',
+    width: 30,
+    height: 2,
+    backgroundColor: '#ffffff',
+    borderRadius: 1,
+    top: 25,
+  },
   micIcon: {
-    fontSize: 20,
-    color: '#fff',
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  micIconBody: {
+    width: 8,
+    height: 12,
+    backgroundColor: '#ffffff',
+    borderRadius: 4,
+    marginBottom: 1,
+  },
+  micIconStand: {
+    width: 1,
+    height: 6,
+    backgroundColor: '#ffffff',
   },
 });
 

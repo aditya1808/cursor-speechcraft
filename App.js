@@ -15,11 +15,35 @@ const App = () => {
           initialRouteName="Recording"
           screenOptions={{
             headerStyle: {
-              backgroundColor: '#6366f1',
+              backgroundColor: '#8b5cf6',
+              elevation: 10,
+              shadowOpacity: 0.4,
+              shadowRadius: 16,
+              shadowColor: '#8b5cf6',
+              shadowOffset: { width: 0, height: 6 },
             },
             headerTintColor: '#fff',
             headerTitleStyle: {
-              fontWeight: 'bold',
+              fontWeight: '600',
+              fontSize: 20,
+            },
+            cardStyleInterpolator: ({ current, layouts }) => {
+              return {
+                cardStyle: {
+                  transform: [
+                    {
+                      translateX: current.progress.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [layouts.screen.width, 0],
+                      }),
+                    },
+                  ],
+                  opacity: current.progress.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [0, 0.5, 1],
+                  }),
+                },
+              };
             },
           }}
         >

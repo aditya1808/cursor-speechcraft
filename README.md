@@ -1,135 +1,187 @@
-# SpeechCraft 🎤
+# SpeechCraft Processing Server
 
-A modern React Native app that converts speech to well-formatted notes using AI processing and real-time voice recognition.
+OpenAI-powered note processing service for SpeechCraft mobile app.
 
-## Features
+## 🚀 Quick Start
 
-- 🎤 **Real-time Voice Recording** - Uses Web Speech API for live transcription
-- 🤖 **AI Text Processing** - Automatically formats and enhances your spoken notes
-- 📱 **Cross-Platform** - Works on web browsers and mobile devices
-- 💾 **Local Storage** - All notes saved securely on your device
-- 🎨 **Modern UI** - Beautiful, intuitive interface with smooth animations
-
-## Screenshots
-
-### Recording Screen
-- Clean interface with microphone button
-- Real-time transcription as you speak
-- Visual feedback during recording
-
-### Notes List
-- View all your saved notes
-- Organized by timestamp
-- Easy delete functionality
-
-## Technology Stack
-
-- **React Native** 0.72.6
-- **Expo** SDK 49
-- **React Navigation** v6
-- **AsyncStorage** for local persistence
-- **Web Speech API** for voice recognition
-
-## Getting Started
-
-### Prerequisites
-- Node.js (v16 or higher)
-- npm or yarn
-- Expo CLI
-
-### Installation
-
-1. Clone the repository:
+### 1. Environment Setup
 ```bash
-git clone https://github.com/yourusername/speechcraft.git
-cd speechcraft
+# Copy environment template
+cp env.example .env
+
+# Edit .env with your actual values
 ```
 
-2. Install dependencies:
+### 2. Required Environment Variables
+```env
+# Server
+NODE_ENV=development
+PORT=3001
+
+# Supabase (from your Supabase dashboard)
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_SERVICE_KEY=your-service-role-key
+
+# OpenAI
+OPENAI_API_KEY=your-openai-api-key
+OPENAI_MODEL=gpt-3.5-turbo
+OPENAI_MAX_TOKENS=1000
+
+# Security
+API_SECRET_KEY=your-super-secret-api-key-here
+```
+
+### 3. Development
 ```bash
+# Install dependencies (already done)
 npm install
-```
 
-3. Start the development server:
-```bash
+# Start development server
+npm run dev
+
+# Start production server
 npm start
 ```
 
-4. Run on your preferred platform:
-- **Web**: Press `w` or visit http://localhost:8081
-- **Android**: Press `a` (requires Android emulator)
-- **iOS**: Press `i` (requires iOS simulator - Mac only)
+## 📡 API Endpoints
 
-## Usage
-
-### Recording Notes
-1. Tap the microphone button 🎤
-2. Allow microphone access when prompted (web only)
-3. Start speaking - see your words appear in real-time
-4. Tap the stop button ⏹ when finished
-5. Your note is automatically processed and saved
-
-### Managing Notes
-- View all notes in the Notes List screen
-- Tap 📋 to navigate to your notes
-- Tap 🗑️ to delete unwanted notes
-- Pull to refresh the notes list
-
-## Browser Compatibility
-
-### Speech Recognition Support:
-- ✅ Chrome/Edge (recommended)
-- ✅ Safari (with limitations)
-- ❌ Firefox (fallback to simulation)
-
-For unsupported browsers, the app automatically falls back to text simulation mode.
-
-## Development
-
-### Project Structure
-```
-speechcraft/
-├── src/
-│   └── screens/
-│       ├── RecordingScreen.js    # Main recording interface
-│       └── NotesListScreen.js    # Notes management
-├── App.js                        # Navigation setup
-├── package.json                  # Dependencies
-└── README.md                     # This file
+### Health Check
+```http
+GET /health
+# No authentication required
 ```
 
-### Key Components
-- **RecordingScreen**: Handles voice input and real-time transcription
-- **NotesListScreen**: Displays and manages saved notes
-- **Web Speech API Integration**: Real-time speech-to-text conversion
+### Process Note
+```http
+POST /api/process
+Content-Type: application/json
+X-API-Key: your-api-secret-key
 
-## Future Enhancements
+{
+  "noteId": "uuid-of-note-to-process"
+}
+```
 
-- 🔊 **Playback** - Listen to original recordings
-- ☁️ **Cloud Sync** - Backup notes to cloud storage
-- 🏷️ **Categories** - Organize notes with tags
-- 🔍 **Search** - Find notes by content
-- 📤 **Export** - Share notes in various formats
-- 🌍 **Multi-language** - Support for multiple languages
+### Get Processing Status
+```http
+GET /api/status/:noteId
+X-API-Key: your-api-secret-key
+```
 
-## Contributing
+### Get Statistics
+```http
+GET /api/stats
+X-API-Key: your-api-secret-key (optional)
+```
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+## 🔧 Configuration
 
-## License
+### OpenAI Models
+- **gpt-3.5-turbo**: Fast, cost-effective ($0.002/1K tokens)
+- **gpt-4**: Higher quality, more expensive ($0.03/1K tokens)
 
-This project is open source and available under the [MIT License](LICENSE).
+### Note Types Supported
+- **meeting**: Professional meeting notes with action items
+- **todo**: Organized task lists with priorities
+- **idea**: Structured creative ideas with development steps
+- **general**: Enhanced general notes with improved formatting
 
-## Acknowledgments
+### Rate Limiting
+- **Global**: 20 requests/minute per IP
+- **Processing**: 10 processing requests/minute
+- **Authenticated users**: Higher limits
 
-- Built with [React Native](https://reactnative.dev/)
-- Powered by [Expo](https://expo.dev/)
-- Uses [Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API)
+## 🛡️ Security Features
 
----
+- API key authentication
+- Rate limiting with IP-based tracking
+- Request/response logging
+- Input validation
+- Error handling without data leakage
+- Secure headers with Helmet.js
 
-**SpeechCraft** - Transform your voice into organized, formatted notes effortlessly! 🚀
+## 📊 Monitoring
+
+### Logs
+- Console output in development
+- File logging in production (`logs/` directory)
+- Structured JSON logs for production analysis
+
+### Health Monitoring
+```bash
+# Check service health
+curl http://localhost:3001/health
+
+# Check detailed stats
+curl -H "X-API-Key: your-key" http://localhost:3001/api/stats
+```
+
+## 🚀 Deployment
+
+### Environment Variables for Production
+```env
+NODE_ENV=production
+PORT=3001
+LOG_LEVEL=info
+```
+
+### Docker Support (Optional)
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY src/ ./src/
+EXPOSE 3001
+CMD ["npm", "start"]
+```
+
+## 🔍 Troubleshooting
+
+### Common Issues
+
+1. **OpenAI API Key Invalid**
+   - Check your API key at https://platform.openai.com/api-keys
+   - Ensure you have billing set up
+
+2. **Supabase Connection Failed**
+   - Verify SUPABASE_URL and SUPABASE_SERVICE_KEY
+   - Check if your IP is allowed in Supabase settings
+
+3. **Rate Limiting Issues**
+   - Adjust RATE_LIMIT_MAX_REQUESTS in .env
+   - Use proper API key for higher limits
+
+4. **Processing Failures**
+   - Check OpenAI account usage limits
+   - Verify note exists in database
+   - Check logs for detailed error messages
+
+### Debug Mode
+```bash
+# Enable debug logging
+NODE_ENV=development npm run dev
+
+# Check logs
+tail -f logs/combined.log
+```
+
+## 📈 Performance
+
+### Typical Processing Times
+- **gpt-3.5-turbo**: 1-3 seconds
+- **gpt-4**: 3-8 seconds
+- **Fallback mode**: <100ms
+
+### Resource Usage
+- **Memory**: ~50-100MB base
+- **CPU**: Low (mainly I/O bound)
+- **Storage**: Minimal (logs only)
+
+## 🔗 Integration
+
+This server integrates with:
+- **Supabase**: Database and authentication
+- **OpenAI**: Text processing and enhancement
+- **React Native App**: Via HTTP API calls
+- **Monitoring Tools**: Via health endpoints and logs
